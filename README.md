@@ -30,18 +30,42 @@
 
 ## 3.项目结构
   ```
-   Gin-blog
-    |-models
-    |-routers
-    |-service
-    |-statics
-        |-css
-        |-js
-    |-templates
-    |-main.go
-    |-go.mod
-    |-go.sum
-    |-README.md
+   . ├── main.go # 项目入口文件
+     ├── go.mod # Go 模块定义文件
+     ├── go.sum # Go 模块校验文件
+     ├── README.md # 项目说明文档
+     ├── .gitignore # Git 忽略文件配置
+     ├── config/ # 配置文件目录
+     ├── logs/ # 日志文件目录
+     │ ├── error.log # 错误日志
+     │ ├── info.log # 信息日志
+     │ └── warning.log # 警告日志
+     ├── middleware/ # 中间件目录
+     │ └── middleware.go # 自定义中间件
+     ├── models/ # 数据模型目录
+     │ ├── db.go # 数据库连接和模型定义
+     │ ├── error.go # 错误处理定义
+     │ └── log.go # 日志模块
+     ├── routers/ # 路由配置目录
+     │ └── router.go # 路由定义
+     ├── service/ # 业务逻辑目录
+     │ ├── commtent.go # 评论相关服务
+     │ ├── post.go # 文章相关服务
+     │ └── user.go # 用户相关服务
+     ├── statics/ # 静态资源目录
+     │ ├── css/ # CSS 样式文件
+     │ │ └── admin.css # 后台样式
+     │ └── js/ # JavaScript 脚本文件
+     │ └── ajax.js # AJAX 相关脚本
+     ├── templates/ # HTML 模板目录
+     │ ├── admin.html # 后台管理页面
+     │ ├── comments.html # 评论展示页面
+     │ ├── login.html # 登录页面
+     │ ├── post-detail.html # 文章详情页面
+     │ ├── posts.html # 文章列表页面
+     │ ├── register.html # 注册页面
+     │ └── users.html # 用户列表页
+
 
   ```
 ## 4.main.go
@@ -90,6 +114,6 @@
 ```
 
 ## 7.测试
-  - 创建用户：
+  - 注册用户：
 
 
