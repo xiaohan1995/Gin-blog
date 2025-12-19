@@ -1,6 +1,24 @@
 # 个人博客系统后台系统
 使用 Go 语言结合 Gin 框架和 GORM 库开发一个个人博客系统的后端，实现博客文章的基本管理功能，包括文章的创建、读取、更新和删除（CRUD）操作，同时支持用户认证和简单的评论功能。
 
+## 功能特性
+1. **用户管理**
+   - 用户注册与登录
+   - 用户身份验证，采用/jwt/v4.5.2版本，中间件验证
+   - 用户信息管理
+
+2. **博客文章管理**
+   - 创建、读取、更新、删除文章 (CRUD)
+   - 文章列表展示
+   - 文章详情查看
+
+3. **评论系统**
+   - 对文章发表评论
+   - 评论管
+4. **错误处理与日志记录**
+   - 统一的错误处理模块
+   - 生成不同级别的日志记录文件（info,warning,error）
+
 ## 1.运行环境
   - Go 1.23.0
   - Gin 1.11.0
@@ -115,5 +133,168 @@
 
 ## 7.测试
   - 注册用户：
+    - **URL**: `/api/register`
+    - **方法**: POST
+    - **参数**:{ "username": "testuser", "email": "test@example.com", "password": "password123" }
+    - **返回值**：{ "code": 200,"message": "注册成功"}
+   
+  - 登录用户：
+    - **URL**: `/api/login`
+    - **方法**: POST
+    - **参数**:{ "username": "testuser", "password": "password123" }
+    - **返回值**：{
+                     "data": {
+                          "id": 2,
+                          "user_name": "testuser",
+                          "email": "test@example.com",
+                          "created_at": "2025-12-19T19:01:27.784+08:00"
+                      },
+                      "message": "登录成功",
+                      "code": 200,
+                      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
+                  }
+      
+  - 获取文章列表：
+    - **URL**: `/api/protected/posts`
+    - **方法**: GET
+    - **返回值**： 
+                  {
+                        "count": 1,
+                        "data": [
+                           {
+                                "ID": 1,
+                                "CreatedAt": "2025-12-17T18:49:04.584+08:00",
+                                "UpdatedAt": "2025-12-17T23:31:58.733+08:00",
+                                "DeletedAt": null,
+                                "Title": "第一篇文章01",
+                                "Content": "小寒写了第一篇文章001",
+                                "UserID": 1,
+                                "User": {
+                                    "ID": 1,
+                                    "CreatedAt": "2025-12-17T15:15:57.813+08:00",
+                                    "UpdatedAt": "2025-12-17T15:15:57.813+08:00",
+                                    "DeletedAt": null,
+                                    "username": "xiaohan",
+                                    "email": "1192539415@qq.com",
+                                    "password": ""
+                                }
+                            }
+                        ],
+                        "message": "获取文章列表成功"
+                    }
+
+- 创建文章
+  - **URL**: `/api/protected/posts`
+  - **方法**: POST
+  - **参数**:{ "content": "第二篇文章写一些内容", "title": "这是第二篇文章" }
+  - **返回值**：{ "code": 200,"message": "创建成功"}
+
+- 修改文章
+  - **URL**: `/api/protected/post/1`
+  - **方法**: PUT
+  - **参数**:{ "content": "第一篇文章0011第一篇文章0011", "title": "第一篇文章0011" }
+  - **返回值**：{"code":403,"message":"您没有权限执行此操作","details":"您没有权限执行此操作"}
+    
+  - **URL**: `/api/protected/post/2`
+  - **方法**: PUT
+  - **参数**:{ "content": "第二篇文章写一些内容2", "title": "这是第二篇文章2" }
+  - **返回值**：{ "code": 200,"message": "更新成功"}
+
+- 删除文章
+  - **URL**: `/api/protected/post/1`
+  - **方法**: DELETE
+  - **返回值**：{"code":403,"message":"您没有权限执行此操作","details":"您没有权限执行此操作"}
+
+  - **URL**: `/api/protected/post/2`
+  - **方法**: DELETE
+  - **返回值**：{"message":"删除成功"}
+
+- 获取文章的评论列表
+  - **URL**: `/api/protected/post/1/comments`
+  - **方法**: GET
+  - **返回值**：{
+              "data": [
+                  {
+                      "ID": 1,
+                      "CreatedAt": "2025-12-19T01:00:48.21+08:00",
+                      "UpdatedAt": "2025-12-19T01:00:48.21+08:00",
+                      "DeletedAt": null,
+                      "Content": "这是给第一篇文章的评论",
+                      "UserID": 1,
+                      "PostID": 1,
+                      "User": {
+                          "ID": 1,
+                          "CreatedAt": "0001-01-01T00:00:00Z",
+                          "UpdatedAt": "0001-01-01T00:00:00Z",
+                          "DeletedAt": null,
+                          "username": "xiaohan",
+                          "email": "",
+                          "password": ""
+                      },
+                      "Post": {
+                          "ID": 0,
+                          "CreatedAt": "0001-01-01T00:00:00Z",
+                          "UpdatedAt": "0001-01-01T00:00:00Z",
+                          "DeletedAt": null,
+                          "Title": "",
+                          "Content": "",
+                          "UserID": 0,
+                          "User": {
+                              "ID": 0,
+                              "CreatedAt": "0001-01-01T00:00:00Z",
+                              "UpdatedAt": "0001-01-01T00:00:00Z",
+                              "DeletedAt": null,
+                              "username": "",
+                              "email": "",
+                              "password": ""
+                          }
+                      }
+                  },
+                  {
+                      "ID": 2,
+                      "CreatedAt": "2025-12-19T11:41:10.845+08:00",
+                      "UpdatedAt": "2025-12-19T11:41:10.845+08:00",
+                      "DeletedAt": null,
+                      "Content": "我发布第二条评论",
+                      "UserID": 1,
+                      "PostID": 1,
+                      "User": {
+                          "ID": 1,
+                          "CreatedAt": "0001-01-01T00:00:00Z",
+                          "UpdatedAt": "0001-01-01T00:00:00Z",
+                          "DeletedAt": null,
+                          "username": "xiaohan",
+                          "email": "",
+                          "password": ""
+                      },
+                      "Post": {
+                          "ID": 0,
+                          "CreatedAt": "0001-01-01T00:00:00Z",
+                          "UpdatedAt": "0001-01-01T00:00:00Z",
+                          "DeletedAt": null,
+                          "Title": "",
+                          "Content": "",
+                          "UserID": 0,
+                          "User": {
+                              "ID": 0,
+                              "CreatedAt": "0001-01-01T00:00:00Z",
+                              "UpdatedAt": "0001-01-01T00:00:00Z",
+                              "DeletedAt": null,
+                              "username": "",
+                              "email": "",
+                              "password": ""
+                          }
+                      }
+                  }
+              ],
+              "message": "获取评论列表成功"
+          }
+
+- 添加评论
+  - **URL**: `/api/protected/comments`
+  - **方法**: POST
+  - **参数**:{ "content": "我也来发一条评论", "post_id": "1" }
+  - **返回值**：{"message":"评论成功"}
+   
 
 
