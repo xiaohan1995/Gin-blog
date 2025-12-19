@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文章详情 - 管理系统</title>
+    <link rel="stylesheet" href="/statics/css/admin.css">
+</head>
+<body>
+    <div class="admin-dashboard">
+        <!-- 侧边栏 -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-header">
+                <h3>管理系统</h3>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="/admin">首页</a></li>
+                <li><a href="/posts" class="active">文章管理</a></li>
+                <li><a href="/comments">评论管理</a></li>
+                <li><a href="/users">用户管理</a></li>
+                <li><a href="/admin/settings">系统设置</a></li>
+            </ul>
+        </aside>
+        <!-- 主内容区 -->
+        <main class="admin-main">
+            <!-- 导航栏 -->
+            <nav class="admin-navbar">
+                <h1>文章详情</h1>
+                <button class="logout-btn" id="logoutBtn">退出登录</button>
+            </nav>
+
+            <!-- 内容区域 -->
+            <div class="admin-content">
+                <div class="content-header">
+                    <h2 id="postTitle">文章标题</h2>
+                    <div class="post-meta">
+                        <span id="postAuthor">作者: </span> | 
+                        <span id="postDate">发布日期: </span>
+                    </div>
+                </div>
+
+                <!-- 文章内容 -->
+                <div class="post-content" id="postContent">
+                    
+                </div>
+
+                <!-- 评论区域 -->
+                <div class="comments-section">
+                    <h3>评论</h3>
+                    <!-- 发布评论表单 -->
+                    <div class="comment-form">
+                        <h4>发表评论</h4>
+                        <form id="commentForm">
+                            <div class="form-group">
+                                <label for="commentContent">评论内容:</label>
+                                <textarea id="commentContent" rows="4" required></textarea>
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary" style="width: auto;">发布评论</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- 评论列表 -->
+                    <div class="comments-list">
+                        <h4>评论列表</h4>
+                        <div id="commentsContainer">
+                            <!-- 评论将通过JavaScript动态加载 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <input type="hidden" id="postId" value="{{.postID}}">
+    <script src="/statics/js/ajax.js"></script>
+    <script>
+        
+        
+
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查是否有token
+            const token = localStorage.getItem('token');
+            if (!token) {
+                // 如果没有token，跳转到登录页面
+                window.location.href = '/login';
+            }
+
+            // 获取文章ID
+            const postId = document.getElementById('postId').value;
+            if (postId) {
+                // 加载文章详情
+                loadPostDetail(postId);
+                // 加载评论列表
+                loadComments(postId);
+            } else {
+                alert('无效的文章ID');
+                window.location.href = '/posts';
+            }
+        });
+
+        // 退出登录功能
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            // 清除本地存储的token和用户信息
+            localStorage.removeItem('token');
+            localStorage.removeItem('userinfo');
+            // 跳转到登录页面
+            window.location.href = '/login';
+        });
+
+        // 加载文章详情
+        function loadPostDetail(postId) {
+            Ajax.get(`/api/protected/post/${postId}`)
+                .then(response => {
+                    console.log(response);
+                    const post = response.data;
+                    document.getElementById('postTitle').textContent = post.Title;
+                    document.getElementById('postAuthor').textContent = '作者: ' + post.User.username;
+                    document.getElementById('postDate').textContent = '发布日期: ' + formatTime(post.CreatedAt);
+                    document.getElementById('postContent').innerHTML = '<p>' + post.Content.replace(/\n/g, '</p><p>') + '</p>';
+                })
+                .catch(error => {
+                    console.error('加载文章详情失败:', error);
+                    alert('加载文章详情失败: ' + error.message);
+                });
+        }
+
+        // 加载评论列表
+        function loadComments(postId) {
+            Ajax.get(`/api/protected/post/${postId}/comments`)
+                .then(response => {
+                    console.log('加载评论列表成功:', response.data);
+                    renderComments(response.data);
+                })
+                .catch(error => {
+                    console.error('加载评论列表失败:', error);
+                    alert('加载评论列表失败: ' + error.message);
+                });
+        }
+
+        // 渲染评论列表
+        function renderComments(comments) {
+            const container = document.getElementById('commentsContainer');
+            container.innerHTML = '';
+
+            if (comments.length === 0) {
+                container.innerHTML = '<p class="no-comments">暂无评论</p>';
+                return;
+            }
+
+            comments.forEach(comment => {
+                const commentElement = document.createElement('div');
+                commentElement.className = 'comment-item';
+                commentElement.innerHTML = `
+                    <div class="comment-header">
+                        <span class="comment-author">${comment.User.username}</span>
+                        <span class="comment-date">${formatTime(comment.CreatedAt)}</span>
+                    </div>
+                    <div class="comment-content">
+                        <p>${comment.Content}</p>
+                    </div>
+                `;
+                container.appendChild(commentElement);
+            });
+        }
+
+        // 发布评论表单提交事件
+        document.getElementById('commentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const postId = document.getElementById('postId').value;
+            const commentData = {
+                content: document.getElementById('commentContent').value,
+                post_id: parseInt(postId)
+            };
+
+            Ajax.post('/api/protected/comments', commentData)
+                .then(response => {
+                    alert('评论发表成功');
+                    document.getElementById('commentContent').value = '';
+                    // 重新加载评论列表
+                    loadComments(postId);
+                })
+                .catch(error => {
+                    console.error('发表评论失败:', error);
+                    alert('发表评论失败: ' + error.message);
+                });
+        });
+
+        // 格式化时间的辅助函数
+        function formatTime(isoString) {
+            if (!isoString) return '';
+            const date = new Date(isoString);
+            return date.toLocaleString('zh-CN');
+        }
+    </script>
+</body>
+</html>

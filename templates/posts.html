@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文章管理 - 管理系统</title>
+    <link rel="stylesheet" href="/statics/css/admin.css">
+</head>
+<body>
+    <div class="admin-dashboard">
+        <!-- 侧边栏 -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-header">
+                <h3>管理系统</h3>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="/admin">首页</a></li>
+                <li><a href="/posts" class="active">文章管理</a></li>
+                <li><a href="/comments">评论管理</a></li>
+                <li><a href="/users">用户管理</a></li>
+                <li><a href="/admin/settings">系统设置</a></li>
+            </ul>
+        </aside>
+        <!-- 主内容区 -->
+        <main class="admin-main">
+            <!-- 导航栏 -->
+            <nav class="admin-navbar">
+                <h1>文章管理</h1>
+                <button class="logout-btn" id="logoutBtn">退出登录</button>
+            </nav>
+
+            <!-- 内容区域 -->
+            <div class="admin-content">
+                <div class="content-header">
+                    <h2>文章列表</h2>
+                    <button class="btn btn-primary" id="addPostBtn" style="width: auto; display: inline-block; margin-top: 10px;">添加文章</button>
+                </div>
+
+                <!-- 文章列表 -->
+                <div class="posts-container">
+                    <table class="posts-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>标题</th>
+                                <th>作者</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="postsTableBody">
+                           
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 添加/编辑文章模态框 -->
+    <div class="modal" id="postModal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modalTitle">添加文章</h2>
+            <form id="postForm">
+                <input type="hidden" id="postId">
+                <div class="form-group">
+                    <label for="postTitle">标题:</label>
+                    <input type="text" id="postTitle" required>
+                </div>
+                <!-- <div class="form-group">
+                    <label for="postAuthor">作者:</label>
+                    <input type="text" id="postAuthor" required>
+                </div> -->
+                <div class="form-group">
+                    <label for="postContent">内容:</label>
+                    <textarea id="postContent" rows="10" required></textarea>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script src="/statics/js/ajax.js"></script>
+    <script>
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 从localStorage获取用户信息
+            const userinfoStr = localStorage.getItem('userinfo');
+            if (userinfoStr) {
+                try {
+                    const userinfo = JSON.parse(userinfoStr);
+                } catch (e) {
+                    console.error('解析用户信息出错:', e);
+                }
+            }
+            
+            // 检查是否有token
+            const token = localStorage.getItem('token');
+            if (!token) {
+                // 如果没有token，跳转到登录页面
+                window.location.href = '/login';
+            }
+
+            // 加载文章列表
+            loadPosts();
+        });
+
+        // 退出登录功能
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            // 清除本地存储的token和用户信息
+            localStorage.removeItem('token');
+            localStorage.removeItem('userinfo');
+            // 跳转到登录页面
+            window.location.href = '/login';
+        });
+
+        // 加载文章列表
+        function loadPosts() {
+            Ajax.get('/api/protected/posts')
+                .then(response => {
+                    // console.log(response);
+                    renderPosts(response.data);
+                })
+                .catch(error => {
+                    console.error('加载文章列表失败:', error);
+                    alert('加载文章列表失败: ' + error.message);
+                });
+        }
+
+        // 渲染文章列表
+        function renderPosts(posts) {
+            const tbody = document.getElementById('postsTableBody');
+            tbody.innerHTML = '';
+            if (posts.length === 0){
+                tbody.innerHTML = '<tr><td colspan="5">暂无数据</td></tr>';
+                return;
+            }
+            
+            posts.forEach(post => {
+                const row = document.createElement('tr');
+                // console.log(post);
+                row.innerHTML = `
+                    <td>${post.ID}</td>
+                    <td>${post.Title}</td>
+                    <td>${post.User.username}</td>
+                    <td>${formatTime(post.CreatedAt)}</td>
+                    <td>
+                        <button class="btn-detail" data-id="${post.ID}">详情</button>
+                        <button class="btn-edit" data-id="${post.ID}">编辑</button>
+                        <button class="btn-delete" data-id="${post.ID}">删除</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // 绑定编辑和删除事件
+            document.querySelectorAll('.btn-edit').forEach(button => {
+                button.addEventListener('click', function() {
+                    const postId = this.getAttribute('data-id');
+                    editPost(postId);
+                });
+            });
+
+            document.querySelectorAll('.btn-delete').forEach(button => {
+                button.addEventListener('click', function() {
+                    const postId = this.getAttribute('data-id');
+                    deletePost(postId);
+                });
+            });
+
+            document.querySelectorAll('.btn-detail').forEach(button => {
+                button.addEventListener('click', function() {
+                    const postId = this.getAttribute('data-id');
+                    PostDetail(postId);
+                });
+            });
+        }
+
+        // 添加文章按钮事件
+        document.getElementById('addPostBtn').addEventListener('click', function() {
+            openPostModal(); // 打开空的模态框用于添加文章
+        });
+
+        // 打开文章模态框
+        function openPostModal(post = null) {
+            const modal = document.getElementById('postModal');
+            const titleElement = document.getElementById('modalTitle');
+            const postIdElement = document.getElementById('postId');
+            const postTitleElement = document.getElementById('postTitle');
+            // const postAuthorElement = document.getElementById('postAuthor');
+            const postContentElement = document.getElementById('postContent');
+
+            if (post) {
+                // 编辑模式
+                titleElement.textContent = '编辑文章';
+                postIdElement.value = post.ID;
+                postTitleElement.value = post.Title;
+                // postAuthorElement.value = post.author;
+                postContentElement.value = post.Content;
+            } else {
+                // 添加模式
+                titleElement.textContent = '添加文章';
+                postIdElement.value = '';
+                postTitleElement.value = '';
+                // postAuthorElement.value = '';
+                postContentElement.value = '';
+            }
+
+            modal.style.display = 'block';
+        }
+
+        // 编辑文章
+        function editPost(postId) {
+            Ajax.get(`/api/protected/post/${postId}`)
+                .then(response => {
+                    // console.log(response);
+                    openPostModal(response.data);
+                })
+                .catch(error => {
+                    console.error('获取文章详情失败:', error);
+                    alert('获取文章详情失败: ' + error.message);
+                });
+        }
+
+        function PostDetail(postId){
+            window.location.href = `/post-detail/${postId}`;
+        }
+
+        // 删除文章
+        function deletePost(postId) {
+            if (confirm('确定要删除这篇文章吗？')) {
+                Ajax.delete(`/api/protected/post/${postId}`)
+                    .then(response => {
+                        alert(response.message);
+                        loadPosts(); // 重新加载文章列表
+                    })
+                    .catch(error => {
+                        console.error('删除文章失败:', error);
+                        alert('删除文章失败: ' + error.message);
+                    });
+            }
+        }
+
+        // 格式化时间的辅助函数
+        function formatTime(isoString) {
+            if (!isoString) return '';
+            const date = new Date(isoString);
+            return date.toLocaleString('zh-CN');
+        }
+
+        // 表单提交事件
+        document.getElementById('postForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const postId = document.getElementById('postId').value;
+            const postData = {
+                title: document.getElementById('postTitle').value,
+                // author: document.getElementById('postAuthor').value,
+                content: document.getElementById('postContent').value
+            };
+
+            if (postId) {
+                // 更新文章
+                Ajax.put(`/api/protected/post/${postId}`, postData)
+                    .then(response => {
+                        alert(response.message);
+                        document.getElementById('postModal').style.display = 'none';
+                        loadPosts(); // 重新加载文章列表
+                    })
+                    .catch(error => {
+                        console.error('更新文章失败:', error);
+                        alert('更新文章失败: ' + error.message);
+                    });
+            } else {
+                // 创建文章
+                Ajax.post('/api/protected/posts', postData)
+                    .then(response => {
+                        alert('文章创建成功');
+                        document.getElementById('postModal').style.display = 'none';
+                        loadPosts(); // 重新加载文章列表
+                    })
+                    .catch(error => {
+                        console.error('创建文章失败:', error);
+                        alert('创建文章失败: ' + error.message);
+                    });
+            }
+        });
+
+        // 关闭模态框
+        document.querySelector('.close').addEventListener('click', function() {
+            document.getElementById('postModal').style.display = 'none';
+        });
+
+        // 点击模态框外部关闭
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('postModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

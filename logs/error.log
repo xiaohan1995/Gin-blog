@@ -1,0 +1,21 @@
+ERROR: 2025/12/18 22:59:48 log.go:60: 用户不存在: ceshi
+ERROR: 2025/12/19 00:51:34 log.go:60: 参数错误: Key: 'Comment.User.UserName' Error:Field validation for 'UserName' failed on the 'required' tag
+Key: 'Comment.User.Email' Error:Field validation for 'Email' failed on the 'required' tag
+Key: 'Comment.User.Password' Error:Field validation for 'Password' failed on the 'required' tag
+Key: 'Comment.Post.User.UserName' Error:Field validation for 'UserName' failed on the 'required' tag
+Key: 'Comment.Post.User.Email' Error:Field validation for 'Email' failed on the 'required' tag
+Key: 'Comment.Post.User.Password' Error:Field validation for 'Password' failed on the 'required' tag
+ERROR: 2025/12/19 00:57:23 log.go:60: 参数错误: Key: 'Comment.User.UserName' Error:Field validation for 'UserName' failed on the 'required' tag
+Key: 'Comment.User.Email' Error:Field validation for 'Email' failed on the 'required' tag
+Key: 'Comment.User.Password' Error:Field validation for 'Password' failed on the 'required' tag
+Key: 'Comment.Post.User.UserName' Error:Field validation for 'UserName' failed on the 'required' tag
+Key: 'Comment.Post.User.Email' Error:Field validation for 'Email' failed on the 'required' tag
+Key: 'Comment.Post.User.Password' Error:Field validation for 'Password' failed on the 'required' tag
+ERROR: 2025/12/19 00:57:48 log.go:60: 参数错误: Key: 'Comment.User.UserName' Error:Field validation for 'UserName' failed on the 'required' tag
+Key: 'Comment.User.Email' Error:Field validation for 'Email' failed on the 'required' tag
+Key: 'Comment.User.Password' Error:Field validation for 'Password' failed on the 'required' tag
+Key: 'Comment.Post.User.UserName' Error:Field validation for 'UserName' failed on the 'required' tag
+Key: 'Comment.Post.User.Email' Error:Field validation for 'Email' failed on the 'required' tag
+Key: 'Comment.Post.User.Password' Error:Field validation for 'Password' failed on the 'required' tag
+ERROR: 2025/12/19 11:32:47 log.go:60: 获取文章评论失败: Error 1054 (42S22): Unknown column 'username' in 'field list'
+ERROR: 2025/12/19 11:36:14 log.go:60: 获取文章评论失败: failed to assign association &models.User{Model:gorm.Model{ID:0x0, CreatedAt:time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC), UpdatedAt:time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC), DeletedAt:gorm.DeletedAt{Time:time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC), Valid:false}}, UserName:"xiaohan", Email:"", Password:""}, make sure foreign fields exists
